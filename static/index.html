@@ -155,7 +155,10 @@ const CARD_DATA={
   'Canada|Qatar':{yc1:1,rc1:0,yc2:3,rc2:2},
   'Mexico|Korea Republic':{yc1:2,rc1:0,yc2:2,rc2:0},
 };
-function getCards(t1,t2){const a=norm(t1),b=norm(t2);for(const k in CARD_DATA){const i=k.indexOf('|'),x=norm(k.slice(0,i)),y=norm(k.slice(i+1));if(x===a&&y===b)return CARD_DATA[k];if(x===b&&y===a){const d=CARD_DATA[k];return{yc1:d.yc2,rc1:d.rc2,yc2:d.yc1,rc2:d.rc1};}}return{yc1:0,rc1:0,yc2:0,rc2:0};}
+// Live card data from /api/cards (Dropbox spreadsheet) is merged over the
+// built-in CARD_DATA at load time; CARD_DATA stays as the offline fallback.
+let CARDS=CARD_DATA;
+function getCards(t1,t2){const a=norm(t1),b=norm(t2);for(const k in CARDS){const i=k.indexOf('|'),x=norm(k.slice(0,i)),y=norm(k.slice(i+1));if(x===a&&y===b)return CARDS[k];if(x===b&&y===a){const d=CARDS[k];return{yc1:d.yc2,rc1:d.rc2,yc2:d.yc1,rc2:d.rc1};}}return{yc1:0,rc1:0,yc2:0,rc2:0};}
 
 function matchesToStats(matches){
   const s={};for(const n of Object.keys(PT))s[n]={name:n,gp:0,w:0,d:0,l:0,pts:0,gf:0,ga:0,gd:0,yc:0,rc:0};
@@ -215,6 +218,16 @@ const FALLBACK=[
 
 function log(msg){document.getElementById('fetch-log').textContent=msg;}
 
+async function loadCards(){
+  try{
+    const r=await fetch('/api/cards');
+    const d=await r.json();
+    if(d&&d.ok&&d.cards&&Object.keys(d.cards).length){
+      CARDS={...CARD_DATA,...d.cards};
+    }
+  }catch(e){/* keep built-in CARD_DATA fallback */}
+}
+
 async function loadData(){
   const btn=document.getElementById('refresh-btn');
   const icon=document.getElementById('refresh-icon');
@@ -222,6 +235,7 @@ async function loadData(){
   const badge=document.getElementById('status-badge');
   badge.textContent='Fetching…';badge.className='badge badge-fetching';
   renderAll(FALLBACK,false);
+  await loadCards();
   try{
     log('⟳ Calling /api/matches…');
     const r=await fetch('/api/matches');
