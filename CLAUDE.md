@@ -44,15 +44,15 @@ The openfootball feed uses `match.score.ft[0]` and `match.score.ft[1]` — NOT `
 The `/api/matches` endpoint returns the raw matches array from that feed.
 
 ### Card data
-The live feed has no card data. Yellow/red cards are maintained in a Dropbox spreadsheet
-(`Card stats.xlsx`, columns: Record, Team1, YC_Team1, RC_Team1, Team2, YC_Team2, RC_Team2).
-The server's `/api/cards` endpoint fetches that sheet (Dropbox share link in the
-`CARD_SHEET_URL` env var), parses it, and returns `{"team1|team2": {yc1,rc1,yc2,rc2}}`,
-cached for 60s. The frontend merges it over the built-in `CARD_DATA` at load.
-`CARD_DATA` in `static/index.html` remains the OFFLINE FALLBACK (used if the sheet is
-unreachable or `CARD_SHEET_URL` is unset) — keep it as a reasonable baseline but the sheet
-is the source of truth. Team names are normalised via `norm()`/`ALIASES`, so feed-vs-sheet
-spelling differences (e.g. "Bosnia & Herzegovina" vs "Bosnia and Herzegovina") match fine.
+The live feed has no card data. Yellow/red cards are maintained by hand in the committed
+spreadsheet `Card stats.xlsx` at the repo root (columns: Record, Team1, YC_Team1, RC_Team1,
+Team2, YC_Team2, RC_Team2). At startup the server parses it with openpyxl (`/api/cards`)
+and returns `{"team1|team2": {yc1,rc1,yc2,rc2}}`; the frontend uses that as the source of
+truth for the cards table. `CARD_DATA` in `static/index.html` is only the OFFLINE FALLBACK
+(used if the file is missing/unparseable). Team names are normalised via `norm()`/`ALIASES`,
+so feed-vs-sheet spelling differences (e.g. "Bosnia & Herzegovina" vs "Bosnia and
+Herzegovina") match fine. NOTE: parsing happens at startup, so updating the spreadsheet
+requires a redeploy/restart to take effect (DO App Platform has no auto-deploy).
 
 ### Fallback
 If `/api/matches` fails or returns no scored matches, the frontend falls back to
@@ -63,9 +63,8 @@ The feed uses inconsistent names (e.g. "Czech Republic" vs "Czechia", "Korea Rep
 "South Korea"). The `ALIASES` object in index.html normalises these. Add new ones as needed.
 
 ## Adding new results (manual update workflow)
-1. Cards: add a row to the Dropbox `Card stats.xlsx` after each matchday. It goes live
-   within ~60s — no code change, no redeploy. (`CARD_DATA` in index.html is only the
-   offline fallback now.)
+1. Cards: edit `Card stats.xlsx` (repo root) on GitHub after each matchday, then redeploy
+   the app on DO. (`CARD_DATA` in index.html is only the offline fallback now.)
 2. Update `FALLBACK` in index.html with the new scores (still code + redeploy).
 3. The live scores come automatically from the openfootball feed — no code change needed
    for goals/results.
