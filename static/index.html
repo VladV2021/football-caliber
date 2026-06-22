@@ -123,7 +123,7 @@ const PT = {
   Eddie:   [{t:'Ecuador',c:'ec'},{t:'Japan',c:'jp'},{t:'Panama',c:'pa'}],
   Kira:    [{t:'Cape Verde',c:'cv'},{t:'South Korea',c:'kr'},{t:'Netherlands',c:'nl'}],
 };
-const ALIASES={'Turkey':'Türkiye','Bosnia and Herzegovina':'Bosnia','Bosnia & Herzegovina':'Bosnia','Czech Republic':'Czechia','Korea Republic':'South Korea',"Côte d'Ivoire":'Ivory Coast','Curacao':'Curaçao','DR Congo':'DR Congo','Cabo Verde':'Cape Verde'};
+const ALIASES={'Turkey':'Türkiye','Bosnia and Herzegovina':'Bosnia','Bosnia & Herzegovina':'Bosnia','Czech Republic':'Czechia','Korea Republic':'South Korea',"Côte d'Ivoire":'Ivory Coast',"Cote d'Ivoire":'Ivory Coast','Curacao':'Curaçao','Curasao':'Curaçao','DR Congo':'DR Congo','Cabo Verde':'Cape Verde'};
 const norm=t=>ALIASES[t]||t;
 const CARD_DATA={
   'Mexico|South Africa':{yc1:1,rc1:1,yc2:2,rc2:2},
@@ -155,7 +155,7 @@ const CARD_DATA={
   'Canada|Qatar':{yc1:1,rc1:0,yc2:3,rc2:2},
   'Mexico|Korea Republic':{yc1:2,rc1:0,yc2:2,rc2:0},
 };
-function getCards(t1,t2){const k1=`${t1}|${t2}`,k2=`${t2}|${t1}`;if(CARD_DATA[k1])return CARD_DATA[k1];if(CARD_DATA[k2]){const d=CARD_DATA[k2];return{yc1:d.yc2,rc1:d.rc2,yc2:d.yc1,rc2:d.rc1};}return{yc1:0,rc1:0,yc2:0,rc2:0};}
+function getCards(t1,t2){const a=norm(t1),b=norm(t2);for(const k in CARD_DATA){const i=k.indexOf('|'),x=norm(k.slice(0,i)),y=norm(k.slice(i+1));if(x===a&&y===b)return CARD_DATA[k];if(x===b&&y===a){const d=CARD_DATA[k];return{yc1:d.yc2,rc1:d.rc2,yc2:d.yc1,rc2:d.rc1};}}return{yc1:0,rc1:0,yc2:0,rc2:0};}
 
 function matchesToStats(matches){
   const s={};for(const n of Object.keys(PT))s[n]={name:n,gp:0,w:0,d:0,l:0,pts:0,gf:0,ga:0,gd:0,yc:0,rc:0};
